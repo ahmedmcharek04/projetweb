@@ -1,34 +1,43 @@
 <?php
 // controllers/ExerciceController.php
 require_once 'models/Exercice.php';
-require_once 'models/ActiviteSportive.php'; // Pour la liste déroulante
+require_once 'models/ActiviteSportive.php';
+require_once 'models/Database.php';
 
 class ExerciceController {
-    private $model;
-    private $activiteModel;
+    private $db;
 
     public function __construct() {
-        $this->model = new Exercice();
-        $this->activiteModel = new ActiviteSportive();
+        $this->db = Database::getInstance()->getConnection();
     }
 
     public function index() {
         $activite_id = $_GET['activite_id'] ?? null;
         
         if ($activite_id) {
-            // Affiche uniquement les exercices de cette activité
-            $exercices = $this->model->getByActivite($activite_id);
-            $activite = $this->activiteModel->getById($activite_id);
+            $stmt = $this->db->prepare("SELECT * FROM exercices WHERE activite_id = :activite_id");
+            $stmt->execute(['activite_id' => $activite_id]);
+            $exercices = $stmt->fetchAll();
+            
+            $stmtAct = $this->db->prepare("SELECT * FROM activites_sportives WHERE id = :id");
+            $stmtAct->execute(['id' => $activite_id]);
+            $activite = $stmtAct->fetch();
         } else {
-            // Fallback: Affiche tout si on ne vient pas d'une carte activité
-            $exercices = $this->model->getAll();
+            $stmt = $this->db->query("
+                SELECT e.*, a.nom AS activite_nom 
+                FROM exercices e 
+                LEFT JOIN activites_sportives a ON e.activite_id = a.id 
+                ORDER BY e.nom ASC
+            ");
+            $exercices = $stmt->fetchAll();
             $activite = ['id' => '', 'nom' => 'Tous les exercices confondus'];
         }
         require_once 'views/exercices/index.php';
     }
 
     public function create() {
-        $activites = $this->activiteModel->getAll(); // Remplir le select
+        $stmtAct = $this->db->query("SELECT * FROM activites_sportives ORDER BY nom ASC");
+        $activites = $stmtAct->fetchAll();
         $errors = [];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -47,7 +56,14 @@ class ExerciceController {
             }
 
             if (empty($errors)) {
-                $this->model->create($nom, $description, $url_video, $difficulte, $activite_id);
+                $stmt = $this->db->prepare("INSERT INTO exercices (nom, description, url_video, difficulte, activite_id) VALUES (:nom, :description, :url_video, :difficulte, :activite_id)");
+                $stmt->execute([
+                    'nom' => $nom,
+                    'description' => $description,
+                    'url_video' => $url_video,
+                    'difficulte' => $difficulte,
+                    'activite_id' => $activite_id ?: null
+                ]);
                 header('Location: index.php?c=exercice&action=index');
                 exit();
             }
@@ -62,12 +78,16 @@ class ExerciceController {
             exit();
         }
 
-        $exercice = $this->model->getById($id);
+        $stmtEx = $this->db->prepare("SELECT * FROM exercices WHERE id = :id");
+        $stmtEx->execute(['id' => $id]);
+        $exercice = $stmtEx->fetch();
+        
         if (!$exercice) {
             die("Exercice introuvable.");
         }
 
-        $activites = $this->activiteModel->getAll(); // Remplir le select
+        $stmtAct = $this->db->query("SELECT * FROM activites_sportives ORDER BY nom ASC");
+        $activites = $stmtAct->fetchAll();
         $errors = [];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -86,7 +106,15 @@ class ExerciceController {
             }
 
             if (empty($errors)) {
-                $this->model->update($id, $nom, $description, $url_video, $difficulte, $activite_id);
+                $stmt = $this->db->prepare("UPDATE exercices SET nom = :nom, description = :description, url_video = :url_video, difficulte = :difficulte, activite_id = :activite_id WHERE id = :id");
+                $stmt->execute([
+                    'id' => $id,
+                    'nom' => $nom,
+                    'description' => $description,
+                    'url_video' => $url_video,
+                    'difficulte' => $difficulte,
+                    'activite_id' => $activite_id ?: null
+                ]);
                 header('Location: index.php?c=exercice&action=index');
                 exit();
             }
@@ -97,7 +125,8 @@ class ExerciceController {
     public function delete() {
         $id = $_GET['id'] ?? null;
         if ($id) {
-            $this->model->delete($id);
+            $stmt = $this->db->prepare("DELETE FROM exercices WHERE id = :id");
+            $stmt->execute(['id' => $id]);
         }
         header('Location: index.php?c=exercice&action=index');
         exit();

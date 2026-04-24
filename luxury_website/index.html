@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stylo de Luxe | Élégance Intemporelle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #D4AF37; /* Gold luxueux */
+            --bg: #050505; /* Noir profond */
+            --text: #F5F5F5; /* Blanc cassé pour lisibilité */
+        }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            /* Scroll très fluide */
+            scroll-behavior: smooth;
+        }
+        
+        /* Conteneur de la Vidéo Fixée en fond */
+        #video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            background: #000;
+        }
+        
+        #scroll-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.6;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Filtre superposé pour assombrir la vidéo et faire ressortir le texte */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(5,5,5,0.1) 0%, rgba(5,5,5,0.85) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Sections de Contenu pour déclencher le scroll */
+        .content {
+            position: relative;
+            z-index: 2;
+            /* La hauteur de ce conteneur détermine la longueur du scroll */
+            padding-bottom: 50vh; 
+        }
+        
+        .section {
+            height: 120vh; /* Espace ample pour permettre un scroll long et voir l'animation */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 10%;
+        }
+
+        /* Typographie Luxueuse */
+        h1, h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 300;
+            margin: 0;
+        }
+        
+        h1 {
+            font-size: 6rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #FFF, var(--primary), #FFF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeUp 1.5s ease forwards 0.5s;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            font-weight: 200;
+            letter-spacing: 0.1em;
+            max-width: 600px;
+            margin: 20px auto;
+            line-height: 1.8;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 1.5s ease forwards 1s;
+        }
+
+        /* Effet Glassmorphism pour les blocs de texte */
+        .text-block {
+            background: rgba(10, 10, 10, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            padding: 4rem;
+            border-radius: 2px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            opacity: 0; /* Géré par GSAP */
+        }
+        
+        .text-block h2 {
+            font-size: 3.5rem;
+            color: #FFF;
+            margin-bottom: 20px;
+        }
+
+        .gold-accent {
+            color: var(--primary);
+            font-style: italic;
+        }
+
+        /* Indicateur de Scroll */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            animation: fadeUp 1.5s ease forwards 2s;
+        }
+        .scroll-indicator span {
+            font-size: 0.7rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        .scroll-line {
+            width: 1px;
+            height: 80px;
+            background: rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .scroll-line::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 50%;
+            background: var(--primary);
+            animation: scrollDown 2.5s infinite ease-in-out;
+        }
+
+        /* Bouton de luxe */
+        .luxury-btn {
+            margin-top: 40px;
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 18px 50px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .luxury-btn:hover {
+            background: var(--primary);
+            color: var(--bg);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Animations Keyframes */
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scrollDown {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(200%); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 { font-size: 3.5rem; }
+            .text-block h2 { font-size: 2.5rem; }
+            .text-block { padding: 2rem; }
+            .section { height: 100vh; padding: 0 5%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fond Vidéo -->
+    <div id="video-container">
+        <!-- Remplacez 'video.mp4' par votre fichier vidéo à la racine -->
+        <video id="scroll-video" muted playsinline preload="auto">
+            <source src="../video.mp4" type="video/mp4">
+            <source src="video.mp4" type="video/mp4">
+            Votre navigateur ne supporte pas la vidéo.
+        </video>
+    </div>
+    
+    <!-- Filtre sombre pour l'élégance -->
+    <div class="overlay"></div>
+
+    <!-- Contenu qui défile par dessus la vidéo -->
+    <div class="content" id="scroll-content">
+        
+        <!-- Section 1 : Hero -->
+        <section class="section" style="height: 100vh;">
+            <h1>L'Équilibre Parfait</h1>
+            <p>Découvrez l'outil ultime où l'art de l'écriture rencontre le <span class="gold-accent">design minimaliste absolu</span>.</p>
+            <div class="scroll-indicator">
+                <span>Découvrir</span>
+                <div class="scroll-line"></div>
+            </div>
+        </section>
+
+        <!-- Section 2 : Caractéristique -->
+        <section class="section">
+            <div class="text-block">
+                <h2>Précision Horlogère</h2>
+                <p>Chaque composant est usiné avec une tolérance micrométrique pour un équilibre parfait en main, rendant chaque mouvement naturel et fluide.</p>
+            </div>
+        </section>
+
+        <!-- Section 3 : Matériaux -->
+        <section class="section">
+            <div class="text-block">
+                <h2>Matériaux Nobles</h2>
+                <p>Sculpté dans un alliage de titane de grade aérospatial, rehaussé de finitions en or 24 carats. Un objet conçu pour traverser le temps avec grâce.</p>
+            </div>
+        </section>
+
+        <!-- Section 4 : Conclusion & CTA -->
+        <section class="section">
+            <div class="text-block" style="text-align: center;">
+                <h2>Écrivez votre Légende</h2>
+                <p>L'édition limitée est maintenant disponible pour les collectionneurs et passionnés d'excellence.</p>
+                <button class="luxury-btn">PRÉCOMMANDER</button>
+            </div>
+        </section>
+        
+    </div>
+
+    <!-- Librairies GSAP pour l'animation liée au Scroll -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <script>
+        // Initialisation de GSAP
+        gsap.registerPlugin(ScrollTrigger);
+
+        const video = document.getElementById('scroll-video');
+        
+        // Fonction principale exécutée quand la vidéo est chargée
+        function initVideoScroll() {
+            let duration = video.duration;
+            
+            // Animation Scrubbing (Lier la vidéo au scroll)
+            ScrollTrigger.create({
+                trigger: ".content",
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 1, // Lissage du scrub pour la vidéo
+                onUpdate: (self) => {
+                    // Calcul du temps de la vidéo basé sur le pourcentage de scroll
+                    let scrollProgress = self.progress;
+                    // Utilise 99.9% de la durée pour éviter la boucle de fin
+                    video.currentTime = duration * scrollProgress * 0.999;
+                }
+            });
+
+            // Animations d'apparition (Fade Up) des blocs de texte
+            const textBlocks = document.querySelectorAll('.text-block');
+            textBlocks.forEach((block) => {
+                gsap.fromTo(block, 
+                    { opacity: 0, y: 150 },
+                    { 
+                        opacity: 1, 
+                        y: 0, 
+                        duration: 1.5,
+                        ease: "power2.out",
+                        scrollTrigger: {
+                            trigger: block,
+                            start: "top 85%", // Déclenche quand le haut du bloc atteint 85% de l'écran
+                            end: "top 40%",
+                            scrub: 1
+                        }
+                    }
+                );
+            });
+        }
+
+        // Attend que les métadonnées de la vidéo (comme la durée) soient prêtes
+        if (video.readyState >= 2) {
+            initVideoScroll();
+        } else {
+            video.addEventListener('loadedmetadata', initVideoScroll);
+        }
+
+        // Sécurité : forcer la vidéo en pause au démarrage
+        video.pause();
+        video.currentTime = 0;
+        
+        // Correction pour les navigateurs mobiles exigeant une interaction utilisateur
+        document.body.addEventListener('touchstart', function() {
+            video.play().then(() => {
+                video.pause();
+            }).catch(() => {});
+        }, { once: true });
+        document.body.addEventListener('click', function() {
+            video.play().then(() => {
+                video.pause();
+            }).catch(() => {});
+        }, { once: true });
+    </script>
+</body>
+</html>

@@ -5,9 +5,13 @@ require_once 'models/Database.php';
 
 // Simple Routeur
 $action = isset($_GET['action']) ? $_GET['action'] : 'home';
-$controller = isset($_GET['c']) ? $_GET['c'] : 'activite';
+$controller = isset($_GET['c']) ? $_GET['c'] : 'home';
 
 switch ($controller) {
+    case 'home':
+        require_once 'controllers/HomeController.php';
+        $ctrl = new HomeController();
+        break;
     case 'activite':
         require_once 'controllers/ActiviteController.php';
         $ctrl = new ActiviteController();
@@ -15,6 +19,10 @@ switch ($controller) {
     case 'exercice':
         require_once 'controllers/ExerciceController.php';
         $ctrl = new ExerciceController();
+        break;
+    case 'seance':
+        require_once 'controllers/SeanceController.php';
+        $ctrl = new SeanceController();
         break;
     default:
         die("Contrôleur introuvable.");

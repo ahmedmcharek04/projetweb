@@ -1,46 +1,28 @@
 <?php
 // models/ActiviteSportive.php
-require_once 'Database.php';
 
 class ActiviteSportive {
-    private $db;
+    private $id;
+    private $nom;
+    private $description;
+    private $categorie;
 
-    public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+    public function __construct($nom = null, $description = null, $categorie = null, $id = null) {
+        $this->id = $id;
+        $this->nom = $nom;
+        $this->description = $description;
+        $this->categorie = $categorie;
     }
 
-    public function getAll() {
-        $stmt = $this->db->query("SELECT * FROM activites_sportives ORDER BY nom ASC");
-        return $stmt->fetchAll();
-    }
+    public function getId() { return $this->id; }
+    public function setId($id) { $this->id = $id; }
 
-    public function getById($id) {
-        $stmt = $this->db->prepare("SELECT * FROM activites_sportives WHERE id = :id");
-        $stmt->execute(['id' => $id]);
-        return $stmt->fetch();
-    }
+    public function getNom() { return $this->nom; }
+    public function setNom($nom) { $this->nom = $nom; }
 
-    public function create($nom, $description, $categorie) {
-        $stmt = $this->db->prepare("INSERT INTO activites_sportives (nom, description, categorie) VALUES (:nom, :description, :categorie)");
-        return $stmt->execute([
-            'nom' => $nom,
-            'description' => $description,
-            'categorie' => $categorie
-        ]);
-    }
+    public function getDescription() { return $this->description; }
+    public function setDescription($description) { $this->description = $description; }
 
-    public function update($id, $nom, $description, $categorie) {
-        $stmt = $this->db->prepare("UPDATE activites_sportives SET nom = :nom, description = :description, categorie = :categorie WHERE id = :id");
-        return $stmt->execute([
-            'id' => $id,
-            'nom' => $nom,
-            'description' => $description,
-            'categorie' => $categorie
-        ]);
-    }
-
-    public function delete($id) {
-        $stmt = $this->db->prepare("DELETE FROM activites_sportives WHERE id = :id");
-        return $stmt->execute(['id' => $id]);
-    }
+    public function getCategorie() { return $this->categorie; }
+    public function setCategorie($categorie) { $this->categorie = $categorie; }
 }

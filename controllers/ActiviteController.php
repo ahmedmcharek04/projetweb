@@ -2,22 +2,31 @@
 // controllers/ActiviteController.php
 require_once 'models/ActiviteSportive.php';
 require_once 'models/Exercice.php';
+require_once 'models/Database.php';
 
 class ActiviteController {
-    private $model;
-    private $exerciceModel;
+    private $db;
 
     public function __construct() {
-        $this->model = new ActiviteSportive();
-        $this->exerciceModel = new Exercice();
+        $this->db = Database::getInstance()->getConnection();
     }
 
     public function index() {
-        $activites = $this->model->getAll();
+        $stmt = $this->db->query("SELECT * FROM activites_sportives ORDER BY nom ASC");
+        $activites = $stmt->fetchAll();
+
+        // Statistiques
+        $total_activites = count($activites);
+        
+        $stmtStats = $this->db->query("SELECT count(*) as total FROM exercices");
+        $total_exercices = $stmtStats->fetchColumn();
+
+        $stmtCat = $this->db->query("SELECT categorie, COUNT(*) as count FROM activites_sportives GROUP BY categorie");
+        $categories_stats = $stmtCat->fetchAll();
+
         require_once 'views/activites/index.php';
     }
 
-    // CREATE, EDIT, DELETE restent inchangés
     public function create() {
         $errors = [];
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,7 +42,12 @@ class ActiviteController {
             }
 
             if (empty($errors)) {
-                $this->model->create($nom, $description, $categorie);
+                $stmt = $this->db->prepare("INSERT INTO activites_sportives (nom, description, categorie) VALUES (:nom, :description, :categorie)");
+                $stmt->execute([
+                    'nom' => $nom,
+                    'description' => $description,
+                    'categorie' => $categorie
+                ]);
                 header('Location: index.php?c=activite&action=index');
                 exit();
             }
@@ -48,7 +62,10 @@ class ActiviteController {
             exit();
         }
 
-        $activite = $this->model->getById($id);
+        $stmt = $this->db->prepare("SELECT * FROM activites_sportives WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $activite = $stmt->fetch();
+        
         if (!$activite) {
             die("Activité introuvable.");
         }
@@ -67,7 +84,13 @@ class ActiviteController {
             }
 
             if (empty($errors)) {
-                $this->model->update($id, $nom, $description, $categorie);
+                $updateStmt = $this->db->prepare("UPDATE activites_sportives SET nom = :nom, description = :description, categorie = :categorie WHERE id = :id");
+                $updateStmt->execute([
+                    'id' => $id,
+                    'nom' => $nom,
+                    'description' => $description,
+                    'categorie' => $categorie
+                ]);
                 header('Location: index.php?c=activite&action=index');
                 exit();
             }
@@ -78,7 +101,8 @@ class ActiviteController {
     public function delete() {
         $id = $_GET['id'] ?? null;
         if ($id) {
-            $this->model->delete($id);
+            $stmt = $this->db->prepare("DELETE FROM activites_sportives WHERE id = :id");
+            $stmt->execute(['id' => $id]);
         }
         header('Location: index.php?c=activite&action=index');
         exit();
@@ -92,9 +116,14 @@ class ActiviteController {
             exit();
         }
 
-        $activite = $this->model->getById($id);
+        $stmt = $this->db->prepare("SELECT * FROM activites_sportives WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $activite = $stmt->fetch();
+
         // Exercices liés avec la Foreign Key
-        $linkedExercices = $this->exerciceModel->getByActivite($id);
+        $stmtExercices = $this->db->prepare("SELECT * FROM exercices WHERE activite_id = :activite_id");
+        $stmtExercices->execute(['activite_id' => $id]);
+        $linkedExercices = $stmtExercices->fetchAll();
 
         require_once 'views/activites/exercices.php';
     }
